@@ -58,8 +58,7 @@ def stations():
 
     return jsonify(stations)
      
-    
-    
+       
 @app.route("/api/v1.0/precipitation")    
 def precipitation():
     session = Session(engine)
@@ -94,6 +93,42 @@ def tobs():
     return jsonify(tobs_list)
 
 
+@app.route('/api/v1.0/<start>')
+def start_range(start):
+    session = Session(engine)
+    
+    result = session.query(func.min(Measurement.tobs), func.avg(Measurement.tobs), func.max(Measurement.tobs)).\
+        filter(Measurement.date >= start).all()
+    
+    session.close()
+
+    tobsfunc = []
+    for min_val, avg, max_val in result:
+        tobs_data = {}
+        tobs_data["Min"] = min_val
+        tobs_data["Average"] = avg
+        tobs_data["Max"] = max_val
+        tobsfunc.append(tobs_data)
+
+    return jsonify(tobsfunc)
+
+@app.route('/api/v1.0/<start>/<stop>')
+def get_t_start_stop(start,stop):
+    session = Session(engine)
+    
+    result = session.query(func.min(Measurement.tobs), func.avg(Measurement.tobs), func.max(Measurement.tobs)).\
+        filter(Measurement.date >= start).filter(Measurement.date <= stop).all()
+    session.close()
+
+    tobsfunc = []
+    for min_val,avg,max_val in result:
+        tobs_data = {}
+        tobs_data["Min"] = min_val
+        tobs_data["Average"] = avg
+        tobs_data["Max"] = max_val
+        tobsfunc.append(tobs_data)
+
+    return jsonify(tobsfunc)
 
 if __name__ == '__main__':
     app.run(debug=True)
